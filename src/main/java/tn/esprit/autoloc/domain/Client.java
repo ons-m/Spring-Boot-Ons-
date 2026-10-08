@@ -1,8 +1,22 @@
 package tn.esprit.autoloc.domain;
 
-import jakarta.persistence.*;
-import lombok.*;
-import java.time.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "client")
@@ -33,4 +47,14 @@ public class Client {
 
     @Column(nullable = false)
     private LocalDate dateInscription;
+
+    // Relation Client -> Reservation.
+    // fetch EAGER: le chargement du client charge aussi ses reservations.
+    // cascade REMOVE: la suppression du client supprime ses reservations.
+    @OneToMany(
+            mappedBy = "client",
+            cascade = CascadeType.REMOVE,
+            fetch = FetchType.EAGER
+    )
+    private List<Reservation> reservations = new ArrayList<>();
 }
