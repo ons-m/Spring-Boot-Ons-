@@ -7,13 +7,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 import tn.esprit.autoloc.domain.Agence;
 import tn.esprit.autoloc.domain.CategorieVehicule;
 import tn.esprit.autoloc.domain.StatutVehicule;
 import tn.esprit.autoloc.domain.Vehicule;
 import tn.esprit.autoloc.repository.IAgenceRepository;
+import tn.esprit.autoloc.service.IAgenceService;
 
 import java.math.BigDecimal;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 class AgenceTests {
@@ -23,6 +28,9 @@ class AgenceTests {
 
     @Autowired
     private IAgenceRepository fullAgenceRepository;
+
+    @Autowired
+    private IAgenceService agenceService;
 
     @Test
     void basicAddAgence() {
@@ -34,6 +42,26 @@ class AgenceTests {
     void fullAddAgence() {
         // Test avec JpaRepository: meme sauvegarde, mais avec un depot plus riche.
         addAgence(fullAgenceRepository);
+    }
+
+    @Test
+    void createAgence() {
+        Agence agence = new Agence();
+        agence.setNom("Agence service");
+        agence.setVille("Tunis");
+        agence.setAdresse("10 Avenue Habib Bourguiba");
+        agence.setTelephone("70000000");
+
+        Agence createdAgence = agenceService.create(agence);
+
+        assertNotNull(createdAgence.getIdAgence());
+        assertTrue(agenceService.findAll().stream()
+                .anyMatch(item -> item.getIdAgence().equals(createdAgence.getIdAgence())));
+
+        System.out.println("Agence creee par le service : "
+                + createdAgence.getIdAgence()
+                + " | "
+                + createdAgence.getNom());
     }
 
     private void addAgence(CrudRepository<Agence, Long> repository) {
@@ -153,5 +181,6 @@ class AgenceTests {
 
 // Depot minimal demande dans Chap3.
 // CrudRepository contient save, findAll, findById, delete, etc.
+@Repository
 interface AgenceRepositoryMock extends CrudRepository<Agence, Long> {
 }
