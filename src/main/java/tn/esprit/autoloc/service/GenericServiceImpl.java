@@ -1,10 +1,12 @@
 package tn.esprit.autoloc.service;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
 
 import java.util.List;
 
+@Transactional
 public abstract class GenericServiceImpl<T, ID> implements IGenericService<T, ID> {
 
     private final JpaRepository<T, ID> repository;
@@ -45,6 +47,10 @@ public abstract class GenericServiceImpl<T, ID> implements IGenericService<T, ID
     @Override
     public T update(ID id, T entity) {
         T existingEntity = findById(id);
+
+        if (entity != null && getId(entity) != null && !id.equals(getId(entity))) {
+            throw new IllegalArgumentException("L'identifiant du corps doit correspondre a celui de l'URL");
+        }
 
         if (!check(entity, false)) {
             throw new IllegalArgumentException("Les donnees de " + getEntityName() + " sont invalides");

@@ -41,6 +41,5 @@ public class ClientServiceImpl extends GenericServiceImpl<Client, Long> implemen
         target.setTelephone(source.getTelephone());
         target.setNumPermis(source.getNumPermis());
         target.setDateInscription(source.getDateInscription());
-        target.setReservations(source.getReservations());
     }
 }

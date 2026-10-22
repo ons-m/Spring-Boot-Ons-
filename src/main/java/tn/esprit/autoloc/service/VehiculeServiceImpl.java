@@ -8,8 +8,11 @@ import tn.esprit.autoloc.repository.IVehiculeRepository;
 @Service
 public class VehiculeServiceImpl extends GenericServiceImpl<Vehicule, Long> implements IVehiculeService {
 
+    private final IVehiculeRepository vehiculeRepository;
+
     public VehiculeServiceImpl(IVehiculeRepository vehiculeRepository) {
         super(vehiculeRepository);
+        this.vehiculeRepository = vehiculeRepository;
     }
 
     @Override
@@ -42,8 +45,14 @@ public class VehiculeServiceImpl extends GenericServiceImpl<Vehicule, Long> impl
         target.setTarifJournalier(source.getTarifJournalier());
         target.setStatut(source.getStatut());
         target.setAgence(source.getAgence());
-        target.setReservations(source.getReservations());
-        target.setMaintenances(source.getMaintenances());
         target.setEquipements(source.getEquipements());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        Vehicule vehicule = findById(id);
+        vehicule.getMaintenances().forEach(maintenance -> maintenance.setVehicule(null));
+        vehiculeRepository.flush();
+        vehiculeRepository.delete(vehicule);
     }
 }

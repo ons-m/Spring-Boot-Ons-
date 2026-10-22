@@ -1,0 +1,3295 @@
+{
+  "info": {
+    "name": "AutoLoc-API",
+    "description": "Atelier Chapitre 6 - API REST, CRUD, gestion des erreurs et documentation OpenAPI. Executer la collection dans l'ordre avec l'environnement local.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.collectionVariables.get('atelierSuffix')) pm.collectionVariables.set('atelierSuffix', String(Date.now()));"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Agences",
+      "item": [
+        {
+          "name": "Liste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Liste JSON\", () => pm.expect(pm.response.json()).to.be.an('array'));",
+                  "pm.test(\"Pas de boucle agence-vehicule\", () => pm.response.json().forEach(a => a.vehicules.forEach(v => pm.expect(v).not.to.have.property('agence'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/agences",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "agences"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-sans-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Identifiant genere\", () => pm.expect(pm.response.json().idAgence).to.be.a('number').and.above(0));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('agencesCrudId', pm.response.json().idAgence);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/agences",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "agences"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Agence Atelier\",\n  \"ville\": \"Tunis\",\n  \"adresse\": \"10 Avenue Habib Bourguiba\",\n  \"telephone\": \"70123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idAgence).to.eql(Number(pm.collectionVariables.get('agencesCrudId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/agences/{{agencesCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "agences",
+                "{{agencesCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Agence introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/agences/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "agences",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-avec-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(400);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/agences",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "agences"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Agence Atelier\",\n  \"ville\": \"Tunis\",\n  \"adresse\": \"10 Avenue Habib Bourguiba\",\n  \"telephone\": \"70123456\",\n  \"idAgence\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idAgence).to.eql(Number(pm.collectionVariables.get('agencesCrudId'))));",
+                  "pm.test(\"Valeur modifiee\", () => pm.expect(pm.response.json().ville).to.eql(pm.variables.replaceIn(\"Sfax\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/agences/{{agencesCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "agences",
+                "{{agencesCrudId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Agence Atelier\",\n  \"ville\": \"Sfax\",\n  \"adresse\": \"10 Avenue Habib Bourguiba\",\n  \"telephone\": \"70123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Agence introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/agences/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "agences",
+                "-1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Agence Atelier\",\n  \"ville\": \"Sfax\",\n  \"adresse\": \"10 Avenue Habib Bourguiba\",\n  \"telephone\": \"70123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Corps vide\", () => pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/agences/{{agencesCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "agences",
+                "{{agencesCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Agence introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/agences/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "agences",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vehicules",
+      "item": [
+        {
+          "name": "Liste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Liste JSON\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/vehicules",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "vehicules"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-sans-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Identifiant genere\", () => pm.expect(pm.response.json().idVehicule).to.be.a('number').and.above(0));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('vehiculesCrudId', pm.response.json().idVehicule);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/vehicules",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "vehicules"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"immatriculation\": \"AT-{{atelierSuffix}}\",\n  \"marque\": \"Renault\",\n  \"modele\": \"Clio\",\n  \"categorie\": \"CITADINE\",\n  \"tarifJournalier\": 75,\n  \"statut\": \"DISPONIBLE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idVehicule).to.eql(Number(pm.collectionVariables.get('vehiculesCrudId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/vehicules/{{vehiculesCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "vehicules",
+                "{{vehiculesCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Vehicule introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/vehicules/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "vehicules",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-avec-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(400);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/vehicules",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "vehicules"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"immatriculation\": \"AT-{{atelierSuffix}}\",\n  \"marque\": \"Renault\",\n  \"modele\": \"Clio\",\n  \"categorie\": \"CITADINE\",\n  \"tarifJournalier\": 75,\n  \"statut\": \"DISPONIBLE\",\n  \"idVehicule\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idVehicule).to.eql(Number(pm.collectionVariables.get('vehiculesCrudId'))));",
+                  "pm.test(\"Valeur modifiee\", () => pm.expect(pm.response.json().modele).to.eql(pm.variables.replaceIn(\"Clio modifiee\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/vehicules/{{vehiculesCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "vehicules",
+                "{{vehiculesCrudId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"immatriculation\": \"AT-{{atelierSuffix}}\",\n  \"marque\": \"Renault\",\n  \"modele\": \"Clio modifiee\",\n  \"categorie\": \"CITADINE\",\n  \"tarifJournalier\": 75,\n  \"statut\": \"DISPONIBLE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Vehicule introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/vehicules/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "vehicules",
+                "-1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"immatriculation\": \"AT-{{atelierSuffix}}\",\n  \"marque\": \"Renault\",\n  \"modele\": \"Clio modifiee\",\n  \"categorie\": \"CITADINE\",\n  \"tarifJournalier\": 75,\n  \"statut\": \"DISPONIBLE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Corps vide\", () => pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/vehicules/{{vehiculesCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "vehicules",
+                "{{vehiculesCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Vehicule introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/vehicules/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "vehicules",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Clients",
+      "item": [
+        {
+          "name": "Liste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Liste JSON\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/clients",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "clients"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-sans-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Identifiant genere\", () => pm.expect(pm.response.json().idClient).to.be.a('number').and.above(0));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('clientsCrudId', pm.response.json().idClient);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/clients",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "clients"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Client Atelier\",\n  \"prenom\": \"Ons\",\n  \"email\": \"atelier.{{atelierSuffix}}@example.test\",\n  \"telephone\": \"22123456\",\n  \"numPermis\": \"PERMIS-{{atelierSuffix}}\",\n  \"dateInscription\": \"2026-10-22\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idClient).to.eql(Number(pm.collectionVariables.get('clientsCrudId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/clients/{{clientsCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "clients",
+                "{{clientsCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Client introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/clients/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "clients",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-avec-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(400);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/clients",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "clients"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Client Atelier\",\n  \"prenom\": \"Ons\",\n  \"email\": \"atelier.{{atelierSuffix}}@example.test\",\n  \"telephone\": \"22123456\",\n  \"numPermis\": \"PERMIS-{{atelierSuffix}}\",\n  \"dateInscription\": \"2026-10-22\",\n  \"idClient\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idClient).to.eql(Number(pm.collectionVariables.get('clientsCrudId'))));",
+                  "pm.test(\"Valeur modifiee\", () => pm.expect(pm.response.json().prenom).to.eql(pm.variables.replaceIn(\"Sara\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/clients/{{clientsCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "clients",
+                "{{clientsCrudId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Client Atelier\",\n  \"prenom\": \"Sara\",\n  \"email\": \"atelier.{{atelierSuffix}}@example.test\",\n  \"telephone\": \"22123456\",\n  \"numPermis\": \"PERMIS-{{atelierSuffix}}\",\n  \"dateInscription\": \"2026-10-22\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Client introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/clients/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "clients",
+                "-1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Client Atelier\",\n  \"prenom\": \"Sara\",\n  \"email\": \"atelier.{{atelierSuffix}}@example.test\",\n  \"telephone\": \"22123456\",\n  \"numPermis\": \"PERMIS-{{atelierSuffix}}\",\n  \"dateInscription\": \"2026-10-22\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Corps vide\", () => pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/clients/{{clientsCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "clients",
+                "{{clientsCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Client introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/clients/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "clients",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Employes",
+      "item": [
+        {
+          "name": "Liste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Liste JSON\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/employes",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "employes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-sans-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Identifiant genere\", () => pm.expect(pm.response.json().idEmploye).to.be.a('number').and.above(0));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('employesCrudId', pm.response.json().idEmploye);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/employes",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "employes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Employe Atelier\",\n  \"prenom\": \"Ali\",\n  \"role\": \"AGENT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idEmploye).to.eql(Number(pm.collectionVariables.get('employesCrudId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/employes/{{employesCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "employes",
+                "{{employesCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Employe introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/employes/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "employes",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-avec-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(400);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/employes",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "employes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Employe Atelier\",\n  \"prenom\": \"Ali\",\n  \"role\": \"AGENT\",\n  \"idEmploye\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idEmploye).to.eql(Number(pm.collectionVariables.get('employesCrudId'))));",
+                  "pm.test(\"Valeur modifiee\", () => pm.expect(pm.response.json().prenom).to.eql(pm.variables.replaceIn(\"Sami\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/employes/{{employesCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "employes",
+                "{{employesCrudId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Employe Atelier\",\n  \"prenom\": \"Sami\",\n  \"role\": \"AGENT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Employe introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/employes/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "employes",
+                "-1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nom\": \"Employe Atelier\",\n  \"prenom\": \"Sami\",\n  \"role\": \"AGENT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Corps vide\", () => pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/employes/{{employesCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "employes",
+                "{{employesCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Employe introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/employes/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "employes",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Reservations",
+      "item": [
+        {
+          "name": "Liste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Liste JSON\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/reservations",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "reservations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-sans-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Identifiant genere\", () => pm.expect(pm.response.json().idReservation).to.be.a('number').and.above(0));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('reservationsCrudId', pm.response.json().idReservation);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/reservations",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "reservations"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateDebut\": \"2026-11-01\",\n  \"dateFin\": \"2026-11-03\",\n  \"statut\": \"CONFIRMEE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idReservation).to.eql(Number(pm.collectionVariables.get('reservationsCrudId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/reservations/{{reservationsCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "reservations",
+                "{{reservationsCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Reservation introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/reservations/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "reservations",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-avec-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(400);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/reservations",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "reservations"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateDebut\": \"2026-11-01\",\n  \"dateFin\": \"2026-11-03\",\n  \"statut\": \"CONFIRMEE\",\n  \"idReservation\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idReservation).to.eql(Number(pm.collectionVariables.get('reservationsCrudId'))));",
+                  "pm.test(\"Valeur modifiee\", () => pm.expect(pm.response.json().statut).to.eql(pm.variables.replaceIn(\"ANNULEE\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/reservations/{{reservationsCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "reservations",
+                "{{reservationsCrudId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateDebut\": \"2026-11-01\",\n  \"dateFin\": \"2026-11-03\",\n  \"statut\": \"ANNULEE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Reservation introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/reservations/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "reservations",
+                "-1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateDebut\": \"2026-11-01\",\n  \"dateFin\": \"2026-11-03\",\n  \"statut\": \"ANNULEE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Corps vide\", () => pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/reservations/{{reservationsCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "reservations",
+                "{{reservationsCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Reservation introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/reservations/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "reservations",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Contrats",
+      "item": [
+        {
+          "name": "Liste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Liste JSON\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/contrats",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "contrats"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-sans-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Identifiant genere\", () => pm.expect(pm.response.json().idContrat).to.be.a('number').and.above(0));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('contratsCrudId', pm.response.json().idContrat);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/contrats",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "contrats"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateSignature\": \"2026-10-22\",\n  \"montantTotal\": 480,\n  \"valide\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idContrat).to.eql(Number(pm.collectionVariables.get('contratsCrudId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/contrats/{{contratsCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "contrats",
+                "{{contratsCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Contrat introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/contrats/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "contrats",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-avec-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(400);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/contrats",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "contrats"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateSignature\": \"2026-10-22\",\n  \"montantTotal\": 480,\n  \"valide\": true,\n  \"idContrat\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idContrat).to.eql(Number(pm.collectionVariables.get('contratsCrudId'))));",
+                  "pm.test(\"Valeur modifiee\", () => pm.expect(pm.response.json().montantTotal).to.eql(550));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/contrats/{{contratsCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "contrats",
+                "{{contratsCrudId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateSignature\": \"2026-10-22\",\n  \"montantTotal\": 550,\n  \"valide\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Contrat introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/contrats/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "contrats",
+                "-1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateSignature\": \"2026-10-22\",\n  \"montantTotal\": 550,\n  \"valide\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Corps vide\", () => pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/contrats/{{contratsCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "contrats",
+                "{{contratsCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Contrat introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/contrats/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "contrats",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Maintenances",
+      "item": [
+        {
+          "name": "Liste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Liste JSON\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/maintenances",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "maintenances"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-sans-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Identifiant genere\", () => pm.expect(pm.response.json().idMaintenance).to.be.a('number').and.above(0));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('maintenancesCrudId', pm.response.json().idMaintenance);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/maintenances",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "maintenances"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateDebut\": \"2026-11-01\",\n  \"dateFin\": \"2026-11-03\",\n  \"description\": \"Revision Atelier\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idMaintenance).to.eql(Number(pm.collectionVariables.get('maintenancesCrudId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/maintenances/{{maintenancesCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "maintenances",
+                "{{maintenancesCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Maintenance introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/maintenances/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "maintenances",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-avec-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(400);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/maintenances",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "maintenances"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateDebut\": \"2026-11-01\",\n  \"dateFin\": \"2026-11-03\",\n  \"description\": \"Revision Atelier\",\n  \"idMaintenance\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idMaintenance).to.eql(Number(pm.collectionVariables.get('maintenancesCrudId'))));",
+                  "pm.test(\"Valeur modifiee\", () => pm.expect(pm.response.json().description).to.eql(pm.variables.replaceIn(\"Revision terminee\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/maintenances/{{maintenancesCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "maintenances",
+                "{{maintenancesCrudId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateDebut\": \"2026-11-01\",\n  \"dateFin\": \"2026-11-03\",\n  \"description\": \"Revision terminee\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Maintenance introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/maintenances/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "maintenances",
+                "-1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateDebut\": \"2026-11-01\",\n  \"dateFin\": \"2026-11-03\",\n  \"description\": \"Revision terminee\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Corps vide\", () => pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/maintenances/{{maintenancesCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "maintenances",
+                "{{maintenancesCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Maintenance introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/maintenances/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "maintenances",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Equipements",
+      "item": [
+        {
+          "name": "Liste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Liste JSON\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/equipements",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "equipements"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-sans-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Identifiant genere\", () => pm.expect(pm.response.json().idEquipement).to.be.a('number').and.above(0));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set('equipementsCrudId', pm.response.json().idEquipement);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/equipements",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "equipements"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"libelle\": \"GPS Atelier {{atelierSuffix}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idEquipement).to.eql(Number(pm.collectionVariables.get('equipementsCrudId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/equipements/{{equipementsCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "equipements",
+                "{{equipementsCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Equipement introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/equipements/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "equipements",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ajout-avec-id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(400);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/equipements",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "equipements"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"libelle\": \"GPS Atelier {{atelierSuffix}}\",\n  \"idEquipement\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Identifiant attendu\", () => pm.expect(pm.response.json().idEquipement).to.eql(Number(pm.collectionVariables.get('equipementsCrudId'))));",
+                  "pm.test(\"Valeur modifiee\", () => pm.expect(pm.response.json().libelle).to.eql(pm.variables.replaceIn(\"GPS modifie {{atelierSuffix}}\")));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/equipements/{{equipementsCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "equipements",
+                "{{equipementsCrudId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"libelle\": \"GPS modifie {{atelierSuffix}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Modification-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Equipement introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/equipements/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "equipements",
+                "-1"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"libelle\": \"GPS modifie {{atelierSuffix}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));",
+                  "pm.test(\"Corps vide\", () => pm.expect(pm.response.text()).to.eql(''));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/equipements/{{equipementsCrudId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "equipements",
+                "{{equipementsCrudId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suppression-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Equipement introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/equipements/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "equipements",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Paiements",
+      "item": [
+        {
+          "name": "Preparation-contrat-avec-paiement",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Paiement cree par composition\", () => {",
+                  "  const c = pm.response.json();",
+                  "  pm.expect(c.paiements).to.have.lengthOf(1);",
+                  "  pm.expect(c.paiements[0].idPaiement).to.be.a('number').and.above(0);",
+                  "  pm.expect(c.paiements[0]).not.to.have.property('contrat');",
+                  "  pm.collectionVariables.set('contratPaiementId', c.idContrat);",
+                  "  pm.collectionVariables.set('paiementId', c.paiements[0].idPaiement);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/contrats",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "contrats"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateSignature\": \"2026-10-22\",\n  \"montantTotal\": 480,\n  \"valide\": true,\n  \"paiements\": [\n    {\n      \"montant\": 100,\n      \"datePaiement\": \"2026-10-22\",\n      \"modePaiement\": \"CARTE\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Liste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Liste JSON\", () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/paiements",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "paiements"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-existant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Paiement attendu\", () => pm.expect(pm.response.json().idPaiement).to.eql(Number(pm.collectionVariables.get('paiementId'))));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/paiements/{{paiementId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "paiements",
+                "{{paiementId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Consultation-inexistant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(404);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.eql(\"Paiement introuvable avec l'identifiant -1\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/paiements/-1",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "paiements",
+                "-1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Lecture-seule-POST",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 405\", () => pm.response.to.have.status(405));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(405);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/paiements",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "paiements"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"montant\": 100,\n  \"datePaiement\": \"2026-10-22\",\n  \"modePaiement\": \"CARTE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Lecture-seule-PUT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 405\", () => pm.response.to.have.status(405));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(405);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{asiApiUrl}}/paiements/{{paiementId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "paiements",
+                "{{paiementId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"montant\": 100,\n  \"datePaiement\": \"2026-10-22\",\n  \"modePaiement\": \"CARTE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Lecture-seule-DELETE",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 405\", () => pm.response.to.have.status(405));",
+                  "pm.test(\"Erreur structuree et chemin exact\", () => {",
+                  "  const e = pm.response.json();",
+                  "  pm.expect(e).to.have.all.keys('timestamp', 'status', 'error', 'message', 'path');",
+                  "  pm.expect(e.status).to.eql(405);",
+                  "  pm.expect(e.path).to.eql(pm.request.url.getPath());",
+                  "  pm.expect(e.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/paiements/{{paiementId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "paiements",
+                "{{paiementId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Nettoyage-contrat-et-paiement",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/contrats/{{contratPaiementId}}",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "contrats",
+                "{{contratPaiementId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Documentation",
+      "item": [
+        {
+          "name": "OpenAPI",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Specification et neuf ressources\", () => {",
+                  " const doc = pm.response.json();",
+                  " pm.expect(doc.openapi).to.eql('3.1.1');",
+                  " pm.expect(doc.info.title).to.eql('AutoLoc API');",
+                  " ['agences','vehicules','clients','employes','reservations','contrats','maintenances','equipements','paiements'].forEach(p => pm.expect(doc.paths).to.have.property('/'+p));",
+                  " pm.expect(doc.paths['/paiements']).to.have.property('get');",
+                  " pm.expect(doc.paths['/paiements']).not.to.have.property('post');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/v3/api-docs",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "v3",
+                "api-docs"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Swagger-UI",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{asiApiUrl}}/swagger-ui/index.html",
+              "host": [
+                "{{asiApiUrl}}"
+              ],
+              "path": [
+                "swagger-ui",
+                "index.html"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "atelierSuffix",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "agencesCrudId",
+      "value": "-1",
+      "type": "string"
+    },
+    {
+      "key": "vehiculesCrudId",
+      "value": "-1",
+      "type": "string"
+    },
+    {
+      "key": "clientsCrudId",
+      "value": "-1",
+      "type": "string"
+    },
+    {
+      "key": "employesCrudId",
+      "value": "-1",
+      "type": "string"
+    },
+    {
+      "key": "reservationsCrudId",
+      "value": "-1",
+      "type": "string"
+    },
+    {
+      "key": "contratsCrudId",
+      "value": "-1",
+      "type": "string"
+    },
+    {
+      "key": "maintenancesCrudId",
+      "value": "-1",
+      "type": "string"
+    },
+    {
+      "key": "equipementsCrudId",
+      "value": "-1",
+      "type": "string"
+    },
+    {
+      "key": "paiementId",
+      "value": "-1",
+      "type": "string"
+    },
+    {
+      "key": "contratPaiementId",
+      "value": "-1",
+      "type": "string"
+    }
+  ]
+}

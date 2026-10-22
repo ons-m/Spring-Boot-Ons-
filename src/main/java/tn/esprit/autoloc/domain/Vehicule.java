@@ -1,5 +1,7 @@
 package tn.esprit.autoloc.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "vehicule")
 @Getter
 @Setter
@@ -71,6 +74,7 @@ public class Vehicule {
             cascade = CascadeType.REMOVE,
             fetch = FetchType.LAZY
     )
+    @JsonIgnore
     private List<Reservation> reservations = new ArrayList<>();
 
     // Relation Vehicule -> Maintenance.
@@ -79,6 +83,7 @@ public class Vehicule {
             mappedBy = "vehicule",
             fetch = FetchType.LAZY
     )
+    @JsonIgnore
     private List<Maintenance> maintenances = new ArrayList<>();
 
     // Relation Vehicule <-> Equipement.

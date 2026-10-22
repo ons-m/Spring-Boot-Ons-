@@ -8,8 +8,11 @@ import tn.esprit.autoloc.repository.IEquipementRepository;
 @Service
 public class EquipementServiceImpl extends GenericServiceImpl<Equipement, Long> implements IEquipementService {
 
+    private final IEquipementRepository equipementRepository;
+
     public EquipementServiceImpl(IEquipementRepository equipementRepository) {
         super(equipementRepository);
+        this.equipementRepository = equipementRepository;
     }
 
     @Override
@@ -30,6 +33,13 @@ public class EquipementServiceImpl extends GenericServiceImpl<Equipement, Long> 
     @Override
     protected void setFields(Equipement source, Equipement target) {
         target.setLibelle(source.getLibelle());
-        target.setVehicules(source.getVehicules());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        Equipement equipement = findById(id);
+        equipement.getVehicules().forEach(vehicule -> vehicule.getEquipements().remove(equipement));
+        equipementRepository.flush();
+        equipementRepository.delete(equipement);
     }
 }

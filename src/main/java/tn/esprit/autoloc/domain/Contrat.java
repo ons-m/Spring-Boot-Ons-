@@ -1,5 +1,9 @@
 package tn.esprit.autoloc.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.validation.Valid;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Table(name = "contrat")
 @Getter
 @Setter
@@ -44,11 +49,14 @@ public class Contrat {
     // Relation inverse avec Reservation.
     // mappedBy = "contrat" signifie que Reservation porte la cle etrangere contrat_id.
     @OneToOne(mappedBy = "contrat", fetch = FetchType.LAZY)
+    @JsonIgnore
     private Reservation reservation;
 
     // Relation Contrat -> Paiement.
     // fetch EAGER: charger un contrat charge aussi ses paiements, comme demande dans l'atelier.
     // cascade ALL: les paiements suivent le cycle de vie du contrat dans les tests d'atelier.
     @OneToMany(mappedBy = "contrat", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonManagedReference("contrat-paiements")
+    @Valid
     private List<Paiement> paiements = new ArrayList<>();
 }
