@@ -18,6 +18,7 @@ import tn.esprit.autoloc.web.ErrorResponse;
 import java.util.List;
 
 @RestController
+// Atelier : les paiements se consultent ici et sont crees avec leur contrat.
 @RequestMapping("/paiements")
 @Tag(name = "Paiements", description = "Consultation des paiements en lecture seule")
 public class PaiementController {

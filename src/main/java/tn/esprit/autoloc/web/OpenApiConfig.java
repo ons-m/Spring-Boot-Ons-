@@ -18,6 +18,7 @@ public class OpenApiConfig {
 
     @Bean
     public OpenApiCustomizer openApiVersion() {
+        // 3.1.1 est la version de la specification demandee, pas celle de la dependance SpringDoc.
         return openApi -> openApi.setOpenapi("3.1.1");
     }
 }
