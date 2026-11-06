@@ -1,0 +1,181 @@
+{
+  "info": {
+    "name": "AutoLoc - Chapitre 8 - Partie I",
+    "description": "Executer toutes les requetes dans l'ordre avec l'environnement local. Creation d'une agence et d'un vehicule de test, trois simulations, puis nettoyage. Les donnees de travail locales sont modifiees.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Preparation - Agence",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{asiApiUrl}}/agences",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nom\": \"Agence Simulation Chap8\",\n  \"ville\": \"Tunis\",\n  \"adresse\": \"Centre\",\n  \"telephone\": \"70123456\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Agence creee', () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set('simulationAgenceId', pm.response.json().idAgence);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Preparation - Vehicule a 100 par jour",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{asiApiUrl}}/vehicules",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"immatriculation\": \"SIM-{{$timestamp}}\",\n  \"marque\": \"Renault\",\n  \"modele\": \"Clio\",\n  \"categorie\": \"CITADINE\",\n  \"statut\": \"DISPONIBLE\",\n  \"tarifJournalier\": 100,\n  \"agence\": {\n    \"idAgence\": \"{{simulationAgenceId}}\"\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Vehicule cree', () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) pm.collectionVariables.set('simulationVehiculeId', pm.response.json().idVehicule);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Simulation - STANDARD",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{asiApiUrl}}/agences/{{simulationAgenceId}}/simulation?jours=40&offre=STANDARD"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+              "pm.test('Rapport textuel', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('text/plain'));",
+              "pm.test('Total 4000.0', () => pm.expect(pm.response.text().trim().split(String.fromCharCode(10))[1]).to.eql('Total : 4000.0'));",
+              "pm.test('Entete et deux lignes', () => { const lignes = pm.response.text().trim().split(String.fromCharCode(10)); pm.expect(lignes).to.have.lengthOf(2); pm.expect(lignes[0]).to.eql('Id : ' + pm.collectionVariables.get('simulationAgenceId') + '; Nom : Agence Simulation Chap8; Tel : 70123456'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Simulation - WEEKEND",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{asiApiUrl}}/agences/{{simulationAgenceId}}/simulation?jours=40&offre=WEEKEND"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+              "pm.test('Rapport textuel', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('text/plain'));",
+              "pm.test('Total 3200.0', () => pm.expect(pm.response.text().trim().split(String.fromCharCode(10))[1]).to.eql('Total : 3200.0'));",
+              "pm.test('Entete et deux lignes', () => { const lignes = pm.response.text().trim().split(String.fromCharCode(10)); pm.expect(lignes).to.have.lengthOf(2); pm.expect(lignes[0]).to.eql('Id : ' + pm.collectionVariables.get('simulationAgenceId') + '; Nom : Agence Simulation Chap8; Tel : 70123456'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Simulation - LONGUE_DUREE",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{asiApiUrl}}/agences/{{simulationAgenceId}}/simulation?jours=40&offre=LONGUE_DUREE"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Statut 200', () => pm.response.to.have.status(200));",
+              "pm.test('Rapport textuel', () => pm.expect(pm.response.headers.get('Content-Type')).to.include('text/plain'));",
+              "pm.test('Total 2850.0', () => pm.expect(pm.response.text().trim().split(String.fromCharCode(10))[1]).to.eql('Total : 2850.0'));",
+              "pm.test('Entete et deux lignes', () => { const lignes = pm.response.text().trim().split(String.fromCharCode(10)); pm.expect(lignes).to.have.lengthOf(2); pm.expect(lignes[0]).to.eql('Id : ' + pm.collectionVariables.get('simulationAgenceId') + '; Nom : Agence Simulation Chap8; Tel : 70123456'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nettoyage - Vehicule",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{asiApiUrl}}/vehicules/{{simulationVehiculeId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Vehicule supprime', () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nettoyage - Agence",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{asiApiUrl}}/agences/{{simulationAgenceId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Agence supprimee', () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
