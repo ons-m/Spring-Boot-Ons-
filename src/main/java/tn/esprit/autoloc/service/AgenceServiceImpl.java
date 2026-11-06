@@ -4,18 +4,37 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.Utils;
+import tn.esprit.autoloc.calcul.VehiculeOffre;
 import tn.esprit.autoloc.domain.Agence;
+import tn.esprit.autoloc.domain.Vehicule;
 import tn.esprit.autoloc.repository.IAgenceRepository;
+import tn.esprit.autoloc.io.RapportFactory;
 
 @Service
 @Primary
-public class AgenceServiceImpl extends GenericServiceImpl<Agence, Long> implements IAgenceService {
+public class AgenceServiceImpl extends GenericServiceImpl<Agence, Long>
+        implements IAgenceService, ISimulationAgenceService {
 
-    private final IAgenceRepository agenceRepository;
+    private final IVehiculeService vehiculeService;
+    private final RapportFactory rapportFactory;
 
-    public AgenceServiceImpl(IAgenceRepository agenceRepository) {
-        super(agenceRepository);
-        this.agenceRepository = agenceRepository;
+    public AgenceServiceImpl(IAgenceRepository repository, IVehiculeService vehiculeService,
+            RapportFactory rapportFactory) {
+        super(repository);
+        this.vehiculeService = vehiculeService;
+        this.rapportFactory = rapportFactory;
+    }
+
+    @Override
+    public String simuler(Agence agence, int nbJours, VehiculeOffre offre) {
+        double total = 0;
+
+        for (Vehicule vehicule : agence.getVehicules()) {
+            total += vehiculeService.calculTarif(vehicule, nbJours, offre);
+        }
+
+        // La Factory choisit l'affichage ; le calcul ne depend pas du mode de rapport.
+        return rapportFactory.creer().ecrire(agence, total);
     }
 
     @Override
@@ -61,8 +80,7 @@ public class AgenceServiceImpl extends GenericServiceImpl<Agence, Long> implemen
         // Les cles etrangeres appartiennent aux enfants : on les detache sans les supprimer.
         agence.getVehicules().forEach(vehicule -> vehicule.setAgence(null));
         agence.getEmployes().forEach(employe -> employe.setAgence(null));
-        agenceRepository.flush();
-        agenceRepository.delete(agence);
+        super.deleteById(id);
     }
 
     @Override
