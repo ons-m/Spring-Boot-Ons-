@@ -68,7 +68,6 @@ class AgenceTests {
         // L'atelier demande d'ajouter un suffixe pour eviter les doublons d'immatriculation.
         // On garde les plaques courtes car la colonne immatriculation a une taille de 20.
         int suffix = (int) (System.currentTimeMillis() % 1_000_000);
-
         Agence agence = new Agence();
         agence.setNom("Agence ariana");
         agence.setVille("Tunis");
