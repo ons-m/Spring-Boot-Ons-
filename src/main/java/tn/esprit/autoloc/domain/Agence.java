@@ -55,6 +55,10 @@ public class Agence {
     @Size(max = 20, message = "Le telephone ne doit pas depasser 20 caracteres")
     private String telephone;
 
+    @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private int effectif;
+
     // Relation Agence -> Vehicule.
     // mappedBy = "agence" signifie que la cle etrangere est dans la table vehicule.
     // cascade PERSIST: quand on enregistre une agence, ses vehicules sont enregistres aussi.
@@ -77,4 +81,20 @@ public class Agence {
     )
     @JsonIgnore
     private List<Employe> employes = new ArrayList<>();
+
+    public void ajouterEmploye(Employe employe) {
+        employe.setAgence(this);
+    }
+
+    public void retirerEmploye(Employe employe) {
+        if (employe.getAgence() == this) {
+            employe.setAgence(null);
+        }
+    }
+
+    public void setEmployes(List<Employe> nouveauxEmployes) {
+        List<Employe> copie = new ArrayList<>(nouveauxEmployes);
+        new ArrayList<>(employes).forEach(this::retirerEmploye);
+        copie.forEach(this::ajouterEmploye);
+    }
 }

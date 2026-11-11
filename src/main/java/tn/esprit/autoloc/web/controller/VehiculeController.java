@@ -74,6 +74,7 @@ public class VehiculeController {
     }
 
     @Operation(summary = "Supprimer : Vehicule")
+    @ApiResponse(responseCode = "409", description = "Le vehicule possede encore des equipements")
     @ApiResponses({@ApiResponse(responseCode = "204", description = "Ressource supprimee, sans corps"),
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
@@ -81,5 +82,23 @@ public class VehiculeController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@Parameter(description = "Identifiant") @PathVariable Long id) {
         vehiculeService.deleteById(id);
+    }
+
+    @Operation(summary = "Desaffecter l'agence du vehicule")
+    @DeleteMapping("/{idVehicule}/agence")
+    public Vehicule desaffecterAgence(@PathVariable Long idVehicule) {
+        return vehiculeService.desaffecterAgence(idVehicule);
+    }
+
+    @Operation(summary = "Affecter une agence au vehicule")
+    @PutMapping("/{idVehicule}/agence/{idAgence}")
+    public Vehicule affecterAgence(@PathVariable Long idVehicule, @PathVariable Long idAgence) {
+        return vehiculeService.affecterAgence(idVehicule, idAgence);
+    }
+
+    @Operation(summary = "Affecter un equipement au vehicule")
+    @PutMapping("/{idVehicule}/equipements/{idEquipement}")
+    public Vehicule affecterEquipement(@PathVariable Long idVehicule, @PathVariable Long idEquipement) {
+        return vehiculeService.affecterEquipement(idVehicule, idEquipement);
     }
 }

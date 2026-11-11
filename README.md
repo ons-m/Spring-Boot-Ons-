@@ -1,4 +1,4 @@
-﻿# AutoLoc API
+# AutoLoc API
 
 Projet Spring Boot de location de véhicules : Spring MVC, JPA/MySQL, documentation OpenAPI et design patterns GoF.
 
@@ -17,9 +17,9 @@ $env:DB_PASSWORD = 'votre_mot_de_passe_mysql'
 
 Sans mot de passe, lancer directement `.\mvnw.cmd spring-boot:run`. Attendre `Started AutolocApiApplication` et garder le processus lancé pendant les tests Postman.
 
-- API : `http://localhost:8080/api`
-- Swagger : `http://localhost:8080/api/swagger-ui/index.html`
-- OpenAPI : `http://localhost:8080/api/v3/api-docs`
+- API : `http://localhost:8090/api`
+- Swagger : `http://localhost:8090/api/swagger-ui/index.html`
+- OpenAPI : `http://localhost:8090/api/v3/api-docs`
 
 ## Ressources REST
 
@@ -44,6 +44,9 @@ Le service de simulation est séparé du contrat CRUD. `IAgenceCompleteService` 
 Voir [l'explication des questions 11 à 17](CHAP8-PARTIE2.md) pour Factory, Decorator, Strategy et la procédure de vérification.
 
 ## Tests
+
+Voir [les questions 10 à 19 sur les agences, employés et transactions](AGENCE-EMPLOYES.md)
+et importer [la collection Postman correspondante](postman/Agence-Employes.postman_collection.json).
 
 ```powershell
 .\mvnw.cmd test

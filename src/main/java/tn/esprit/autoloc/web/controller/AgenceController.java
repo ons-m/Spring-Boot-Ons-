@@ -25,6 +25,7 @@ import tn.esprit.autoloc.domain.Agence;
 import tn.esprit.autoloc.service.IAgenceService;
 import tn.esprit.autoloc.service.ISimulationAgenceService;
 import tn.esprit.autoloc.web.ErrorResponse;
+import tn.esprit.autoloc.web.AgenceEmployesRequest;
 
 import java.util.List;
 
@@ -103,5 +104,12 @@ public class AgenceController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@Parameter(description = "Identifiant") @PathVariable Long id) {
         agenceService.deleteById(id);
+    }
+
+    @Operation(summary = "Modifier une agence et ajouter de nouveaux employes dans une transaction")
+    @PutMapping("/{id}/employes")
+    public Agence updateAvecEmployes(@PathVariable Long id,
+            @Valid @RequestBody AgenceEmployesRequest request) {
+        return agenceService.updateAvecEmployes(id, request.agence(), request.employes());
     }
 }

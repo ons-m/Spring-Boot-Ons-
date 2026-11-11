@@ -45,4 +45,15 @@ public class Employe {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "agence_id")
     private Agence agence;
+
+    // Un seul point de synchronisation pour les deux sens de la relation.
+    public void setAgence(Agence nouvelleAgence) {
+        if (agence != null) {
+            agence.getEmployes().remove(this);
+        }
+        agence = nouvelleAgence;
+        if (nouvelleAgence != null && !nouvelleAgence.getEmployes().contains(this)) {
+            nouvelleAgence.getEmployes().add(this);
+        }
+    }
 }

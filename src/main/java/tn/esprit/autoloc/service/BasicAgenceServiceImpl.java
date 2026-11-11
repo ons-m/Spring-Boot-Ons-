@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.autoloc.Utils;
 import tn.esprit.autoloc.domain.Agence;
+import tn.esprit.autoloc.domain.Employe;
+import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import tn.esprit.autoloc.repository.IAgenceRepository;
 
@@ -14,6 +16,21 @@ import java.util.List;
 public class BasicAgenceServiceImpl implements IAgenceService {
 
     private final IAgenceRepository agenceRepository;
+    private final IEmployeService employeService;
+
+    @Override
+    @Transactional
+    public Agence updateAvecEmployes(Long id, Agence agence, List<Employe> nouveauxEmployes) {
+        Agence existante = update(id, agence);
+        if (nouveauxEmployes == null) {
+            throw new IllegalArgumentException("La liste des nouveaux employes est obligatoire");
+        }
+        for (Employe employe : nouveauxEmployes) {
+            existante.ajouterEmploye(employeService.create(employe));
+        }
+        existante.setEffectif(existante.getEmployes().size());
+        return existante;
+    }
 
     @Override
     public boolean check(Agence agence, boolean isNew) {
@@ -60,7 +77,6 @@ public class BasicAgenceServiceImpl implements IAgenceService {
         existingAgence.setAdresse(agence.getAdresse());
         existingAgence.setTelephone(agence.getTelephone());
         existingAgence.setVehicules(agence.getVehicules());
-        existingAgence.setEmployes(agence.getEmployes());
 
         return agenceRepository.save(existingAgence);
     }

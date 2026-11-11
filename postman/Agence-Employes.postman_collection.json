@@ -1,0 +1,334 @@
+{
+  "info": {
+    "name": "AutoLoc - Agence et employes - Questions 10 a 19",
+    "description": "Executer dans l'ordre avec Collection Runner. Serveur AutoLoc sur 8090. Deux ajouts valides, rollback d'un lot invalide, nouveau lot valide et nettoyage. Le scenario volontairement sans transaction est uniquement dans le test Java.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8090/api"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Creer une agence",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/agences",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nom\": \"Agence transaction - valide\",\n  \"ville\": \"Tunis\",\n  \"adresse\": \"1 rue de Tunis\",\n  \"telephone\": \"71000000\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Creation 201\", () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set(\"agenceId\", pm.response.json().idAgence);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Ajouter deux employes valides",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/agences/{{agenceId}}/employes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"agence\": {\n    \"nom\": \"Agence transaction - valide\",\n    \"ville\": \"Tunis\",\n    \"adresse\": \"1 rue de Tunis\",\n    \"telephone\": \"71000000\"\n  },\n  \"employes\": [\n    {\n      \"nom\": \"Ben Ali\",\n      \"prenom\": \"Ali\",\n      \"role\": \"AGENT\"\n    },\n    {\n      \"nom\": \"Trabelsi\",\n      \"prenom\": \"Sara\",\n      \"role\": \"MANAGER\"\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Succes et effectif 2\", () => { pm.response.to.have.status(200); pm.expect(pm.response.json().effectif).to.eql(2); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Verifier les deux insertions",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/employes"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Employes lies : 2\", () => {",
+              " pm.response.to.have.status(200);",
+              " const lies = pm.response.json().filter(e => e.agence && String(e.agence.idAgence) === String(pm.collectionVariables.get(\"agenceId\")));",
+              " pm.expect(lies.length).to.eql(2);",
+              " lies.forEach((e, i) => pm.collectionVariables.set(\"employeId\" + (i+1), e.idEmploye));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Deuxieme employe invalide",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/agences/{{agenceId}}/employes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"agence\": {\n    \"nom\": \"Modification a annuler\",\n    \"ville\": \"Tunis\",\n    \"adresse\": \"1 rue de Tunis\",\n    \"telephone\": \"71000000\"\n  },\n  \"employes\": [\n    {\n      \"nom\": \"Ben Ali\",\n      \"prenom\": \"Ali\",\n      \"role\": \"AGENT\"\n    },\n    {\n      \"nom\": \"\",\n      \"prenom\": \"Sara\",\n      \"role\": \"MANAGER\"\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Erreur 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Verifier le rollback de l agence",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/agences/{{agenceId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Agence et effectif inchanges\", () => { pm.response.to.have.status(200); pm.expect(pm.response.json().nom).to.eql(\"Agence transaction - valide\"); pm.expect(pm.response.json().effectif).to.eql(2); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Verifier aucun employe partiel",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/employes"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Employes lies : 2\", () => {",
+              " pm.response.to.have.status(200);",
+              " const lies = pm.response.json().filter(e => e.agence && String(e.agence.idAgence) === String(pm.collectionVariables.get(\"agenceId\")));",
+              " pm.expect(lies.length).to.eql(2);",
+              " lies.forEach((e, i) => pm.collectionVariables.set(\"employeId\" + (i+1), e.idEmploye));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Retablir les donnees valides",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/agences/{{agenceId}}/employes",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"agence\": {\n    \"nom\": \"Agence transaction - valide\",\n    \"ville\": \"Tunis\",\n    \"adresse\": \"1 rue de Tunis\",\n    \"telephone\": \"71000000\"\n  },\n  \"employes\": [\n    {\n      \"nom\": \"Ben Ali\",\n      \"prenom\": \"Ali\",\n      \"role\": \"AGENT\"\n    },\n    {\n      \"nom\": \"Trabelsi\",\n      \"prenom\": \"Sara\",\n      \"role\": \"MANAGER\"\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Succes et effectif total 4\", () => { pm.response.to.have.status(200); pm.expect(pm.response.json().effectif).to.eql(4); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Verifier quatre insertions et memoriser les IDs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/employes"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Employes lies : 4\", () => {",
+              " pm.response.to.have.status(200);",
+              " const lies = pm.response.json().filter(e => e.agence && String(e.agence.idAgence) === String(pm.collectionVariables.get(\"agenceId\")));",
+              " pm.expect(lies.length).to.eql(4);",
+              " lies.forEach((e, i) => pm.collectionVariables.set(\"employeId\" + (i+1), e.idEmploye));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nettoyage - Employe 1",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/employes/{{employeId1}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Suppression 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nettoyage - Employe 2",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/employes/{{employeId2}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Suppression 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nettoyage - Employe 3",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/employes/{{employeId3}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Suppression 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nettoyage - Employe 4",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/employes/{{employeId4}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Suppression 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nettoyage - Agence",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/agences/{{agenceId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Suppression 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

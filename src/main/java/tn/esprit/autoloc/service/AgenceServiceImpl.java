@@ -6,6 +6,9 @@ import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.Utils;
 import tn.esprit.autoloc.calcul.VehiculeOffre;
 import tn.esprit.autoloc.domain.Agence;
+import tn.esprit.autoloc.domain.Employe;
+import java.util.List;
+import java.util.ArrayList;
 import tn.esprit.autoloc.domain.Vehicule;
 import tn.esprit.autoloc.repository.IAgenceRepository;
 import tn.esprit.autoloc.io.RapportFactory;
@@ -17,12 +20,14 @@ public class AgenceServiceImpl extends GenericServiceImpl<Agence, Long>
 
     private final IVehiculeService vehiculeService;
     private final RapportFactory rapportFactory;
+    private final IEmployeService employeService;
 
     public AgenceServiceImpl(IAgenceRepository repository, IVehiculeService vehiculeService,
-            RapportFactory rapportFactory) {
+            RapportFactory rapportFactory, IEmployeService employeService) {
         super(repository);
         this.vehiculeService = vehiculeService;
         this.rapportFactory = rapportFactory;
+        this.employeService = employeService;
     }
 
     @Override
@@ -75,11 +80,27 @@ public class AgenceServiceImpl extends GenericServiceImpl<Agence, Long>
 
     @Override
     @Transactional
+    public Agence updateAvecEmployes(Long id, Agence agence, List<Employe> nouveauxEmployes) {
+        Agence existante = update(id, agence);
+        if (nouveauxEmployes == null) {
+            throw new IllegalArgumentException("La liste des nouveaux employes est obligatoire");
+        }
+        for (Employe employe : nouveauxEmployes) {
+            // La validation reste dans le service employe : une erreur annule toute l'operation.
+            Employe cree = employeService.create(employe);
+            existante.ajouterEmploye(cree);
+        }
+        existante.setEffectif(existante.getEmployes().size());
+        return existante;
+    }
+
+    @Override
+    @Transactional
     public void deleteById(Long id) {
         Agence agence = findById(id);
         // Les cles etrangeres appartiennent aux enfants : on les detache sans les supprimer.
         agence.getVehicules().forEach(vehicule -> vehicule.setAgence(null));
-        agence.getEmployes().forEach(employe -> employe.setAgence(null));
+        new ArrayList<>(agence.getEmployes()).forEach(agence::retirerEmploye);
         super.deleteById(id);
     }
 
