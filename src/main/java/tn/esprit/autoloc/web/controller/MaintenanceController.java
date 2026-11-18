@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -43,18 +42,18 @@ public class MaintenanceController {
     }
 
     @Operation(summary = "Consulter : Maintenance")
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "Ressource trouvee"),
+    @ApiResponse(responseCode = "200", description = "Ressource trouvee")
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{id}")
     public Maintenance findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
         return maintenanceService.findById(id);
     }
 
     @Operation(summary = "Creer : Maintenance")
-    @ApiResponses({@ApiResponse(responseCode = "201", description = "Ressource creee"),
+    @ApiResponse(responseCode = "201", description = "Ressource creee")
             @ApiResponse(responseCode = "400", description = "Donnees invalides ou identifiant fourni",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Maintenance create(@Valid @RequestBody Maintenance maintenance) {
@@ -62,11 +61,11 @@ public class MaintenanceController {
     }
 
     @Operation(summary = "Modifier : Maintenance")
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "Ressource modifiee"),
+    @ApiResponse(responseCode = "200", description = "Ressource modifiee")
             @ApiResponse(responseCode = "400", description = "Donnees invalides",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PutMapping("/{id}")
     public Maintenance update(@Parameter(description = "Identifiant") @PathVariable Long id,
             @Valid @RequestBody Maintenance maintenance) {
@@ -74,9 +73,9 @@ public class MaintenanceController {
     }
 
     @Operation(summary = "Supprimer : Maintenance")
-    @ApiResponses({@ApiResponse(responseCode = "204", description = "Ressource supprimee, sans corps"),
+    @ApiResponse(responseCode = "204", description = "Ressource supprimee, sans corps")
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@Parameter(description = "Identifiant") @PathVariable Long id) {

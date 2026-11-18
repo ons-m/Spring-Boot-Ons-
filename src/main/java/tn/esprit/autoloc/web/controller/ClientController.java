@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -43,18 +42,18 @@ public class ClientController {
     }
 
     @Operation(summary = "Consulter : Client")
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "Ressource trouvee"),
+    @ApiResponse(responseCode = "200", description = "Ressource trouvee")
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{id}")
     public Client findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
         return clientService.findById(id);
     }
 
     @Operation(summary = "Creer : Client")
-    @ApiResponses({@ApiResponse(responseCode = "201", description = "Ressource creee"),
+    @ApiResponse(responseCode = "201", description = "Ressource creee")
             @ApiResponse(responseCode = "400", description = "Donnees invalides ou identifiant fourni",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Client create(@Valid @RequestBody Client client) {
@@ -62,11 +61,11 @@ public class ClientController {
     }
 
     @Operation(summary = "Modifier : Client")
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "Ressource modifiee"),
+    @ApiResponse(responseCode = "200", description = "Ressource modifiee")
             @ApiResponse(responseCode = "400", description = "Donnees invalides",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PutMapping("/{id}")
     public Client update(@Parameter(description = "Identifiant") @PathVariable Long id,
             @Valid @RequestBody Client client) {
@@ -74,9 +73,9 @@ public class ClientController {
     }
 
     @Operation(summary = "Supprimer : Client")
-    @ApiResponses({@ApiResponse(responseCode = "204", description = "Ressource supprimee, sans corps"),
+    @ApiResponse(responseCode = "204", description = "Ressource supprimee, sans corps")
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@Parameter(description = "Identifiant") @PathVariable Long id) {

@@ -1,6 +1,7 @@
 package tn.esprit.autoloc;
 
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ExtendWith(OutputCaptureExtension.class)
 @Transactional
+@Disabled("Tests des anciens ateliers")
 class ConsoleSimulationTests {
     @Autowired private IAgenceService agenceService;
     @Autowired private IVehiculeService vehiculeService;

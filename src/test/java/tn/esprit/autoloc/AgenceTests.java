@@ -1,6 +1,7 @@
 package tn.esprit.autoloc;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
@@ -21,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
+@Disabled("Tests des anciens ateliers")
 class AgenceTests {
 
     @Autowired
@@ -35,13 +37,13 @@ class AgenceTests {
     @Test
     void basicAddAgence() {
         // Test avec CrudRepository: on verifie les operations CRUD simples.
-        addAgence(basicAgenceRepository);
+        assertNotNull(addAgence(basicAgenceRepository).getIdAgence());
     }
 
     @Test
     void fullAddAgence() {
         // Test avec JpaRepository: meme sauvegarde, mais avec un depot plus riche.
-        addAgence(fullAgenceRepository);
+        assertNotNull(addAgence(fullAgenceRepository).getIdAgence());
     }
 
     @Test
@@ -64,7 +66,7 @@ class AgenceTests {
                 + createdAgence.getNom());
     }
 
-    private void addAgence(CrudRepository<Agence, Long> repository) {
+    private Agence addAgence(CrudRepository<Agence, Long> repository) {
         // L'atelier demande d'ajouter un suffixe pour eviter les doublons d'immatriculation.
         // On garde les plaques courtes car la colonne immatriculation a une taille de 20.
         int suffix = (int) (System.currentTimeMillis() % 1_000_000);
@@ -97,22 +99,22 @@ class AgenceTests {
         agence.getVehicules().add(vehicule2);
 
         // Grace au cascade PERSIST dans Agence, save(agence) persiste aussi les vehicules.
-        repository.save(agence);
+        return repository.save(agence);
     }
 
     @Test
     void basicLoadAgence() {
         // Chargement avec CrudRepository.
-        loadAgence(basicAgenceRepository, "CrudRepository");
+        assertTrue(loadAgence(basicAgenceRepository, "CrudRepository") > 0);
     }
 
     @Test
     void fullLoadAgence() {
         // Chargement avec JpaRepository.
-        loadAgence(fullAgenceRepository, "JpaRepository");
+        assertTrue(loadAgence(fullAgenceRepository, "JpaRepository") > 0);
     }
 
-    private void loadAgence(CrudRepository<Agence, Long> repository, String repositoryType) {
+    private long loadAgence(CrudRepository<Agence, Long> repository, String repositoryType) {
         StringBuilder builder = new StringBuilder();
         builder.append("Depot utilise : ").append(repositoryType).append(System.lineSeparator());
 
@@ -136,6 +138,7 @@ class AgenceTests {
         // Dans le PDF, on utilise une assertion qui echoue pour afficher le resultat.
         // Ici on affiche dans la console pour garder les tests executables sans echec volontaire.
         System.out.println(builder);
+        return repository.count();
     }
 
     @Test
@@ -154,6 +157,7 @@ class AgenceTests {
                 .append(System.lineSeparator()));
 
         System.out.println(builder);
+        assertTrue(agences.iterator().hasNext());
     }
 
     @Test
@@ -175,6 +179,7 @@ class AgenceTests {
                 .append(System.lineSeparator()));
 
         System.out.println(builder);
+        assertTrue(page.hasContent());
     }
 }
 

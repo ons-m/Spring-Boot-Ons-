@@ -15,6 +15,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import tn.esprit.autoloc.exception.ResourceNotFoundException;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -73,7 +74,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private ResponseEntity<Object> error(HttpStatus status, String message, String path, HttpHeaders headers) {
-        ErrorResponse body = new ErrorResponse(LocalDateTime.now(), status.value(), status.getReasonPhrase(),
+        ErrorResponse body = new ErrorResponse(LocalDateTime.now(ZoneId.systemDefault()), status.value(), status.getReasonPhrase(),
                 message, path);
         return new ResponseEntity<>(body, headers, status);
     }

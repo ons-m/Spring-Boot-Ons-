@@ -5,7 +5,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -43,18 +42,18 @@ public class VehiculeController {
     }
 
     @Operation(summary = "Consulter : Vehicule")
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "Ressource trouvee"),
+    @ApiResponse(responseCode = "200", description = "Ressource trouvee")
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{id}")
     public Vehicule findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
         return vehiculeService.findById(id);
     }
 
     @Operation(summary = "Creer : Vehicule")
-    @ApiResponses({@ApiResponse(responseCode = "201", description = "Ressource creee"),
+    @ApiResponse(responseCode = "201", description = "Ressource creee")
             @ApiResponse(responseCode = "400", description = "Donnees invalides ou identifiant fourni",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Vehicule create(@Valid @RequestBody Vehicule vehicule) {
@@ -62,11 +61,11 @@ public class VehiculeController {
     }
 
     @Operation(summary = "Modifier : Vehicule")
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "Ressource modifiee"),
+    @ApiResponse(responseCode = "200", description = "Ressource modifiee")
             @ApiResponse(responseCode = "400", description = "Donnees invalides",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PutMapping("/{id}")
     public Vehicule update(@Parameter(description = "Identifiant") @PathVariable Long id,
             @Valid @RequestBody Vehicule vehicule) {
@@ -75,9 +74,9 @@ public class VehiculeController {
 
     @Operation(summary = "Supprimer : Vehicule")
     @ApiResponse(responseCode = "409", description = "Le vehicule possede encore des equipements")
-    @ApiResponses({@ApiResponse(responseCode = "204", description = "Ressource supprimee, sans corps"),
+    @ApiResponse(responseCode = "204", description = "Ressource supprimee, sans corps")
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))})
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteById(@Parameter(description = "Identifiant") @PathVariable Long id) {

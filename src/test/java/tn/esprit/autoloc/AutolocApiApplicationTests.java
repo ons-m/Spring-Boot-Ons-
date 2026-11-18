@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -25,6 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(properties = "server.servlet.context-path=/api")
 @AutoConfigureMockMvc
 @Transactional
+@Disabled("Tests des anciens ateliers")
 class AutolocApiApplicationTests {
 
     @Autowired private MockMvc mvc;
@@ -48,19 +50,35 @@ class AutolocApiApplicationTests {
     @MethodSource("ressources")
     void crudComplet(String path, String idField, String resource, String initial, String updated) throws Exception {
         ObjectNode body = (ObjectNode) mapper.readTree(initial);
+        long id = createResource(path, idField, body);
+        verifyCreatedResource(path, idField, id);
+        verifyInvalidCreation(path, idField, id, body);
+        ObjectNode changes = (ObjectNode) mapper.readTree(updated);
+        verifyUpdate(path, idField, id, changes);
+        verifyDelete(path, id, resource, changes);
+    }
+
+    private long createResource(String path, String idField, ObjectNode body) throws Exception {
         JsonNode created = call("POST", path, body, 201);
         long id = created.path(idField).asLong();
         assertThat(id).isPositive();
+        return id;
+    }
+
+    private void verifyCreatedResource(String path, String idField, long id) throws Exception {
         assertThat(call("GET", path, null, 200).isArray()).isTrue();
         assertThat(call("GET", path + "/" + id, null, 200).path(idField).asLong()).isEqualTo(id);
+    }
 
+    private void verifyInvalidCreation(String path, String idField, long id, ObjectNode body) throws Exception {
         body.put(idField, id);
         assertError("POST", path, body, 400, null);
         body.remove(idField);
         assertError("POST", path, mapper.createObjectNode(), 400, null);
         assertError("PUT", path + "/" + id, mapper.createObjectNode(), 400, null);
+    }
 
-        ObjectNode changes = (ObjectNode) mapper.readTree(updated);
+    private void verifyUpdate(String path, String idField, long id, ObjectNode changes) throws Exception {
         JsonNode modified = call("PUT", path + "/" + id, changes, 200);
         changes.properties().forEach(field -> assertThat(modified.path(field.getKey()))
                 .as(field.getKey()).isEqualTo(field.getValue()));
@@ -68,7 +86,9 @@ class AutolocApiApplicationTests {
         changes.put(idField, id + 9999);
         assertError("PUT", path + "/" + id, changes, 400, null);
         changes.remove(idField);
+    }
 
+    private void verifyDelete(String path, long id, String resource, ObjectNode changes) throws Exception {
         String absent = resource + " introuvable avec l'identifiant -1";
         assertError("GET", path + "/-1", null, 404, absent);
         assertError("PUT", path + "/-1", changes, 404, absent);

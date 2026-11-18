@@ -7,17 +7,17 @@ import tn.esprit.autoloc.exception.ResourceNotFoundException;
 import java.util.List;
 
 @Transactional
-public abstract class GenericServiceImpl<T, ID> implements IGenericService<T, ID> {
+public abstract class GenericServiceImpl<T, K> implements IGenericService<T, K> {
 
-    private final JpaRepository<T, ID> repository;
+    private final JpaRepository<T, K> repository;
 
-    protected GenericServiceImpl(JpaRepository<T, ID> repository) {
+    protected GenericServiceImpl(JpaRepository<T, K> repository) {
         this.repository = repository;
     }
 
     protected abstract String getEntityName();
 
-    protected abstract ID getId(T entity);
+    protected abstract K getId(T entity);
 
     protected abstract void setFields(T source, T target);
 
@@ -34,7 +34,7 @@ public abstract class GenericServiceImpl<T, ID> implements IGenericService<T, ID
     }
 
     @Override
-    public T findById(ID id) {
+    public T findById(K id) {
         return repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(getEntityName(), String.valueOf(id)));
     }
@@ -45,7 +45,7 @@ public abstract class GenericServiceImpl<T, ID> implements IGenericService<T, ID
     }
 
     @Override
-    public T update(ID id, T entity) {
+    public T update(K id, T entity) {
         T existingEntity = findById(id);
 
         if (entity != null && getId(entity) != null && !id.equals(getId(entity))) {
@@ -61,7 +61,7 @@ public abstract class GenericServiceImpl<T, ID> implements IGenericService<T, ID
     }
 
     @Override
-    public void deleteById(ID id) {
+    public void deleteById(K id) {
         if (!repository.existsById(id)) {
             throw new ResourceNotFoundException(getEntityName(), String.valueOf(id));
         }

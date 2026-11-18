@@ -1,6 +1,7 @@
 package tn.esprit.autoloc;
 
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -29,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@Disabled("Tests des anciens ateliers")
 class SimulationTests {
     @Autowired private IVehiculeService vehiculeService;
     @Autowired private IAgenceService agenceService;

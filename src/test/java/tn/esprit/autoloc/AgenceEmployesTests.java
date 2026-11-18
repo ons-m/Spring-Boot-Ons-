@@ -117,7 +117,8 @@ class AgenceEmployesTests {
             Agence a = agences.findById(id);
             a.ajouterEmploye(employes.create(employe("Premier")));
         });
-        assertThrows(IllegalArgumentException.class, () -> employes.create(employe("")));
+        Employe employeInvalide = employe("");
+        assertThrows(IllegalArgumentException.class, () -> employes.create(employeInvalide));
         assertEquals("Apres", agences.findById(id).getNom());
         assertEquals(1, nombreEmployes());
         assertEquals(0, agences.findById(id).getEffectif());

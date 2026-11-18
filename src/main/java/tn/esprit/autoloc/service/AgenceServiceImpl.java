@@ -1,6 +1,7 @@
 package tn.esprit.autoloc.service;
 
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.Utils;
@@ -21,13 +22,16 @@ public class AgenceServiceImpl extends GenericServiceImpl<Agence, Long>
     private final IVehiculeService vehiculeService;
     private final RapportFactory rapportFactory;
     private final IEmployeService employeService;
+    private final IAgenceService agenceServiceProxy;
 
     public AgenceServiceImpl(IAgenceRepository repository, IVehiculeService vehiculeService,
-            RapportFactory rapportFactory, IEmployeService employeService) {
+            RapportFactory rapportFactory, IEmployeService employeService,
+            @Lazy IAgenceService agenceServiceProxy) {
         super(repository);
         this.vehiculeService = vehiculeService;
         this.rapportFactory = rapportFactory;
         this.employeService = employeService;
+        this.agenceServiceProxy = agenceServiceProxy;
     }
 
     @Override
@@ -81,7 +85,7 @@ public class AgenceServiceImpl extends GenericServiceImpl<Agence, Long>
     @Override
     @Transactional
     public Agence updateAvecEmployes(Long id, Agence agence, List<Employe> nouveauxEmployes) {
-        Agence existante = update(id, agence);
+        Agence existante = agenceServiceProxy.update(id, agence);
         if (nouveauxEmployes == null) {
             throw new IllegalArgumentException("La liste des nouveaux employes est obligatoire");
         }
