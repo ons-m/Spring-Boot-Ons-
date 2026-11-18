@@ -137,11 +137,24 @@ class AutolocApiApplicationTests {
 
         JsonNode loaded = call("GET", "agences/" + agenceId, null, 200);
         assertThat(loaded.path("vehicules").size()).isEqualTo(1);
-        assertThat(loaded.path("vehicules").get(0).has("agence")).isFalse();
+        verifierVehiculeSansAgenceDansLaReponse(loaded);
         ((ObjectNode) agence).remove("vehicules");
+        verifierMiseAJourAgence(agenceId, agence);
+        verifierSuppressionsEtAssociations(agenceId, vehiculeId, employeId, equipementId,
+                contratId, reservationId, maintenanceId);
+    }
+
+    private void verifierVehiculeSansAgenceDansLaReponse(JsonNode agence) {
+        assertThat(agence.path("vehicules").get(0).has("agence")).isFalse();
+    }
+
+    private void verifierMiseAJourAgence(long agenceId, JsonNode agence) throws Exception {
         call("PUT", "agences/" + agenceId, agence, 200);
         assertThat(call("GET", "agences/" + agenceId, null, 200).path("vehicules").size()).isEqualTo(1);
+    }
 
+    private void verifierSuppressionsEtAssociations(long agenceId, long vehiculeId, long employeId,
+            long equipementId, long contratId, long reservationId, long maintenanceId) throws Exception {
         call("DELETE", "agences/" + agenceId, null, 204);
         assertThat(call("GET", "vehicules/" + vehiculeId, null, 200).path("agence").isNull()).isTrue();
         assertThat(call("GET", "employes/" + employeId, null, 200).path("agence").isNull()).isTrue();
