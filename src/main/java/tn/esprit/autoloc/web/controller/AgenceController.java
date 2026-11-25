@@ -24,7 +24,10 @@ import tn.esprit.autoloc.domain.Agence;
 import tn.esprit.autoloc.service.IAgenceService;
 import tn.esprit.autoloc.service.ISimulationAgenceService;
 import tn.esprit.autoloc.web.ErrorResponse;
-import tn.esprit.autoloc.web.AgenceEmployesRequest;
+import tn.esprit.autoloc.web.dto.AgenceDto;
+import tn.esprit.autoloc.web.dto.AgenceEmployesDto;
+import tn.esprit.autoloc.web.dto.AgenceMapper;
+import tn.esprit.autoloc.web.dto.EmployeMapper;
 
 import java.util.List;
 
@@ -36,18 +39,23 @@ public class AgenceController {
 
     private final IAgenceService agenceService;
     private final ISimulationAgenceService simulationAgenceService;
+    private final AgenceMapper agenceMapper;
+    private final EmployeMapper employeMapper;
 
-    public AgenceController(IAgenceService agenceService, ISimulationAgenceService simulationAgenceService) {
+    public AgenceController(IAgenceService agenceService, ISimulationAgenceService simulationAgenceService,
+            AgenceMapper agenceMapper, EmployeMapper employeMapper) {
         // Injection par constructeur : le controleur delegue les regles metier au service.
         this.agenceService = agenceService;
         this.simulationAgenceService = simulationAgenceService;
+        this.agenceMapper = agenceMapper;
+        this.employeMapper = employeMapper;
     }
 
     @Operation(summary = "Lister les agences")
     @ApiResponse(responseCode = "200", description = "Liste retournee")
     @GetMapping
-    public List<Agence> findAll() {
-        return agenceService.findAll();
+    public List<AgenceDto> findAll() {
+        return agenceMapper.toDtoList(agenceService.findAll());
     }
 
     @Operation(summary = "Simuler le total des tarifs d'une agence")
@@ -67,8 +75,8 @@ public class AgenceController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{id}")
-    public Agence findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
-        return agenceService.findById(id);
+    public AgenceDto findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
+        return agenceMapper.toDto(agenceService.findById(id));
     }
 
     @Operation(summary = "Creer : Agence")
@@ -78,8 +86,8 @@ public class AgenceController {
     @PostMapping
     // Une creation reussie retourne 201 ; @Valid controle les contraintes de l'entite.
     @ResponseStatus(HttpStatus.CREATED)
-    public Agence create(@Valid @RequestBody Agence agence) {
-        return agenceService.create(agence);
+    public AgenceDto create(@Valid @RequestBody AgenceDto agence) {
+        return agenceMapper.toDto(agenceService.create(agenceMapper.toEntity(agence)));
     }
 
     @Operation(summary = "Modifier : Agence")
@@ -89,9 +97,9 @@ public class AgenceController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PutMapping("/{id}")
-    public Agence update(@Parameter(description = "Identifiant") @PathVariable Long id,
-            @Valid @RequestBody Agence agence) {
-        return agenceService.update(id, agence);
+    public AgenceDto update(@Parameter(description = "Identifiant") @PathVariable Long id,
+            @Valid @RequestBody AgenceDto agence) {
+        return agenceMapper.toDto(agenceService.update(id, agenceMapper.toEntity(agence)));
     }
 
     @Operation(summary = "Supprimer : Agence")
@@ -107,8 +115,9 @@ public class AgenceController {
 
     @Operation(summary = "Modifier une agence et ajouter de nouveaux employes dans une transaction")
     @PutMapping("/{id}/employes")
-    public Agence updateAvecEmployes(@PathVariable Long id,
-            @Valid @RequestBody AgenceEmployesRequest request) {
-        return agenceService.updateAvecEmployes(id, request.agence(), request.employes());
+    public AgenceDto updateAvecEmployes(@PathVariable Long id,
+            @Valid @RequestBody AgenceEmployesDto request) {
+        return agenceMapper.toDto(agenceService.updateAvecEmployes(id, agenceMapper.toEntity(request.agence()),
+                employeMapper.toEntityList(request.employes())));
     }
 }

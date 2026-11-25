@@ -17,9 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import tn.esprit.autoloc.domain.Contrat;
 import tn.esprit.autoloc.service.IContratService;
 import tn.esprit.autoloc.web.ErrorResponse;
+import tn.esprit.autoloc.web.dto.ContratDto;
+import tn.esprit.autoloc.web.dto.ContratMapper;
 
 import java.util.List;
 
@@ -29,16 +30,18 @@ import java.util.List;
 public class ContratController {
 
     private final IContratService contratService;
+    private final ContratMapper contratMapper;
 
-    public ContratController(IContratService contratService) {
+    public ContratController(IContratService contratService, ContratMapper contratMapper) {
         this.contratService = contratService;
+        this.contratMapper = contratMapper;
     }
 
     @Operation(summary = "Lister les contrats")
     @ApiResponse(responseCode = "200", description = "Liste retournee")
     @GetMapping
-    public List<Contrat> findAll() {
-        return contratService.findAll();
+    public List<ContratDto> findAll() {
+        return contratMapper.toDtoList(contratService.findAll());
     }
 
     @Operation(summary = "Consulter : Contrat")
@@ -46,8 +49,8 @@ public class ContratController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{id}")
-    public Contrat findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
-        return contratService.findById(id);
+    public ContratDto findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
+        return contratMapper.toDto(contratService.findById(id));
     }
 
     @Operation(summary = "Creer : Contrat")
@@ -56,8 +59,8 @@ public class ContratController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Contrat create(@Valid @RequestBody Contrat contrat) {
-        return contratService.create(contrat);
+    public ContratDto create(@Valid @RequestBody ContratDto contrat) {
+        return contratMapper.toDto(contratService.create(contratMapper.toEntity(contrat)));
     }
 
     @Operation(summary = "Modifier : Contrat")
@@ -67,9 +70,9 @@ public class ContratController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PutMapping("/{id}")
-    public Contrat update(@Parameter(description = "Identifiant") @PathVariable Long id,
-            @Valid @RequestBody Contrat contrat) {
-        return contratService.update(id, contrat);
+    public ContratDto update(@Parameter(description = "Identifiant") @PathVariable Long id,
+            @Valid @RequestBody ContratDto contrat) {
+        return contratMapper.toDto(contratService.update(id, contratMapper.toEntity(contrat)));
     }
 
     @Operation(summary = "Supprimer : Contrat")

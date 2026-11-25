@@ -11,6 +11,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,21 +38,27 @@ public class Client {
     private Long idClient;
 
     @Column(nullable = false, length = 100)
+    @NotBlank(message = "Le nom est obligatoire") @Size(max = 100, message = "Le nom ne doit pas depasser 100 caracteres")
     private String nom;
 
     @Column(nullable = false, length = 100)
+    @NotBlank(message = "Le prenom est obligatoire") @Size(max = 100, message = "Le prenom ne doit pas depasser 100 caracteres")
     private String prenom;
 
     @Column(nullable = false, unique = true, length = 150)
+    @NotBlank(message = "L'email est obligatoire") @Email(message = "L'email est invalide")
     private String email;
 
     @Column(nullable = false, length = 20)
+    @NotBlank(message = "Le telephone est obligatoire")
     private String telephone;
 
     @Column(nullable = false, unique = true, length = 50)
+    @NotBlank(message = "Le numero de permis est obligatoire")
     private String numPermis;
 
     @Column(nullable = false)
+    @NotNull(message = "La date d'inscription est obligatoire")
     private LocalDate dateInscription;
 
     // Relation Client -> Reservation.

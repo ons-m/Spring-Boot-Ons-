@@ -10,6 +10,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,12 +34,15 @@ public class Maintenance {
     private Long idMaintenance;
 
     @Column(nullable = false)
+    @NotNull(message = "La date de debut est obligatoire")
     private LocalDate dateDebut;
 
     @Column(nullable = false)
+    @NotNull(message = "La date de fin est obligatoire")
     private LocalDate dateFin;
 
     @Column(nullable = false, length = 500)
+    @NotBlank(message = "La description est obligatoire") @Size(max = 500, message = "La description ne doit pas depasser 500 caracteres")
     private String description;
 
     // Plusieurs maintenances peuvent concerner le meme vehicule.

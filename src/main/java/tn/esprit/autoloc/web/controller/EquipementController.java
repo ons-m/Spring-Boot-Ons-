@@ -17,9 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import tn.esprit.autoloc.domain.Equipement;
 import tn.esprit.autoloc.service.IEquipementService;
 import tn.esprit.autoloc.web.ErrorResponse;
+import tn.esprit.autoloc.web.dto.EquipementDto;
+import tn.esprit.autoloc.web.dto.EquipementMapper;
 
 import java.util.List;
 
@@ -29,16 +30,18 @@ import java.util.List;
 public class EquipementController {
 
     private final IEquipementService equipementService;
+    private final EquipementMapper equipementMapper;
 
-    public EquipementController(IEquipementService equipementService) {
+    public EquipementController(IEquipementService equipementService, EquipementMapper equipementMapper) {
         this.equipementService = equipementService;
+        this.equipementMapper = equipementMapper;
     }
 
     @Operation(summary = "Lister les equipements")
     @ApiResponse(responseCode = "200", description = "Liste retournee")
     @GetMapping
-    public List<Equipement> findAll() {
-        return equipementService.findAll();
+    public List<EquipementDto> findAll() {
+        return equipementMapper.toDtoList(equipementService.findAll());
     }
 
     @Operation(summary = "Consulter : Equipement")
@@ -46,8 +49,8 @@ public class EquipementController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{id}")
-    public Equipement findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
-        return equipementService.findById(id);
+    public EquipementDto findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
+        return equipementMapper.toDto(equipementService.findById(id));
     }
 
     @Operation(summary = "Creer : Equipement")
@@ -56,8 +59,8 @@ public class EquipementController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Equipement create(@Valid @RequestBody Equipement equipement) {
-        return equipementService.create(equipement);
+    public EquipementDto create(@Valid @RequestBody EquipementDto equipement) {
+        return equipementMapper.toDto(equipementService.create(equipementMapper.toEntity(equipement)));
     }
 
     @Operation(summary = "Modifier : Equipement")
@@ -67,9 +70,9 @@ public class EquipementController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PutMapping("/{id}")
-    public Equipement update(@Parameter(description = "Identifiant") @PathVariable Long id,
-            @Valid @RequestBody Equipement equipement) {
-        return equipementService.update(id, equipement);
+    public EquipementDto update(@Parameter(description = "Identifiant") @PathVariable Long id,
+            @Valid @RequestBody EquipementDto equipement) {
+        return equipementMapper.toDto(equipementService.update(id, equipementMapper.toEntity(equipement)));
     }
 
     @Operation(summary = "Supprimer : Equipement")

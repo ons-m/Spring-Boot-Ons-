@@ -17,9 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import tn.esprit.autoloc.domain.Client;
 import tn.esprit.autoloc.service.IClientService;
 import tn.esprit.autoloc.web.ErrorResponse;
+import tn.esprit.autoloc.web.dto.ClientDto;
+import tn.esprit.autoloc.web.dto.ClientMapper;
 
 import java.util.List;
 
@@ -29,16 +30,18 @@ import java.util.List;
 public class ClientController {
 
     private final IClientService clientService;
+    private final ClientMapper clientMapper;
 
-    public ClientController(IClientService clientService) {
+    public ClientController(IClientService clientService, ClientMapper clientMapper) {
         this.clientService = clientService;
+        this.clientMapper = clientMapper;
     }
 
     @Operation(summary = "Lister les clients")
     @ApiResponse(responseCode = "200", description = "Liste retournee")
     @GetMapping
-    public List<Client> findAll() {
-        return clientService.findAll();
+    public List<ClientDto> findAll() {
+        return clientMapper.toDtoList(clientService.findAll());
     }
 
     @Operation(summary = "Consulter : Client")
@@ -46,8 +49,8 @@ public class ClientController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{id}")
-    public Client findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
-        return clientService.findById(id);
+    public ClientDto findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
+        return clientMapper.toDto(clientService.findById(id));
     }
 
     @Operation(summary = "Creer : Client")
@@ -56,8 +59,8 @@ public class ClientController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Client create(@Valid @RequestBody Client client) {
-        return clientService.create(client);
+    public ClientDto create(@Valid @RequestBody ClientDto client) {
+        return clientMapper.toDto(clientService.create(clientMapper.toEntity(client)));
     }
 
     @Operation(summary = "Modifier : Client")
@@ -67,9 +70,9 @@ public class ClientController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PutMapping("/{id}")
-    public Client update(@Parameter(description = "Identifiant") @PathVariable Long id,
-            @Valid @RequestBody Client client) {
-        return clientService.update(id, client);
+    public ClientDto update(@Parameter(description = "Identifiant") @PathVariable Long id,
+            @Valid @RequestBody ClientDto client) {
+        return clientMapper.toDto(clientService.update(id, clientMapper.toEntity(client)));
     }
 
     @Operation(summary = "Supprimer : Client")

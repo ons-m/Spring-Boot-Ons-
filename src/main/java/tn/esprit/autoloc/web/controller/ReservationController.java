@@ -17,9 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import tn.esprit.autoloc.domain.Reservation;
 import tn.esprit.autoloc.service.IReservationService;
 import tn.esprit.autoloc.web.ErrorResponse;
+import tn.esprit.autoloc.web.dto.ReservationDto;
+import tn.esprit.autoloc.web.dto.ReservationMapper;
 
 import java.util.List;
 
@@ -29,16 +30,18 @@ import java.util.List;
 public class ReservationController {
 
     private final IReservationService reservationService;
+    private final ReservationMapper reservationMapper;
 
-    public ReservationController(IReservationService reservationService) {
+    public ReservationController(IReservationService reservationService, ReservationMapper reservationMapper) {
         this.reservationService = reservationService;
+        this.reservationMapper = reservationMapper;
     }
 
     @Operation(summary = "Lister les reservations")
     @ApiResponse(responseCode = "200", description = "Liste retournee")
     @GetMapping
-    public List<Reservation> findAll() {
-        return reservationService.findAll();
+    public List<ReservationDto> findAll() {
+        return reservationMapper.toDtoList(reservationService.findAll());
     }
 
     @Operation(summary = "Consulter : Reservation")
@@ -46,8 +49,8 @@ public class ReservationController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{id}")
-    public Reservation findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
-        return reservationService.findById(id);
+    public ReservationDto findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
+        return reservationMapper.toDto(reservationService.findById(id));
     }
 
     @Operation(summary = "Creer : Reservation")
@@ -56,8 +59,8 @@ public class ReservationController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Reservation create(@Valid @RequestBody Reservation reservation) {
-        return reservationService.create(reservation);
+    public ReservationDto create(@Valid @RequestBody ReservationDto reservation) {
+        return reservationMapper.toDto(reservationService.create(reservationMapper.toEntity(reservation)));
     }
 
     @Operation(summary = "Modifier : Reservation")
@@ -67,9 +70,9 @@ public class ReservationController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PutMapping("/{id}")
-    public Reservation update(@Parameter(description = "Identifiant") @PathVariable Long id,
-            @Valid @RequestBody Reservation reservation) {
-        return reservationService.update(id, reservation);
+    public ReservationDto update(@Parameter(description = "Identifiant") @PathVariable Long id,
+            @Valid @RequestBody ReservationDto reservation) {
+        return reservationMapper.toDto(reservationService.update(id, reservationMapper.toEntity(reservation)));
     }
 
     @Operation(summary = "Supprimer : Reservation")

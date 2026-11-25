@@ -17,9 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import tn.esprit.autoloc.domain.Vehicule;
 import tn.esprit.autoloc.service.IVehiculeService;
 import tn.esprit.autoloc.web.ErrorResponse;
+import tn.esprit.autoloc.web.dto.VehiculeDto;
+import tn.esprit.autoloc.web.dto.VehiculeMapper;
 
 import java.util.List;
 
@@ -29,16 +30,18 @@ import java.util.List;
 public class VehiculeController {
 
     private final IVehiculeService vehiculeService;
+    private final VehiculeMapper vehiculeMapper;
 
-    public VehiculeController(IVehiculeService vehiculeService) {
+    public VehiculeController(IVehiculeService vehiculeService, VehiculeMapper vehiculeMapper) {
         this.vehiculeService = vehiculeService;
+        this.vehiculeMapper = vehiculeMapper;
     }
 
     @Operation(summary = "Lister les vehicules")
     @ApiResponse(responseCode = "200", description = "Liste retournee")
     @GetMapping
-    public List<Vehicule> findAll() {
-        return vehiculeService.findAll();
+    public List<VehiculeDto> findAll() {
+        return vehiculeMapper.toDtoList(vehiculeService.findAll());
     }
 
     @Operation(summary = "Consulter : Vehicule")
@@ -46,8 +49,8 @@ public class VehiculeController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{id}")
-    public Vehicule findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
-        return vehiculeService.findById(id);
+    public VehiculeDto findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
+        return vehiculeMapper.toDto(vehiculeService.findById(id));
     }
 
     @Operation(summary = "Creer : Vehicule")
@@ -56,8 +59,8 @@ public class VehiculeController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Vehicule create(@Valid @RequestBody Vehicule vehicule) {
-        return vehiculeService.create(vehicule);
+    public VehiculeDto create(@Valid @RequestBody VehiculeDto vehicule) {
+        return vehiculeMapper.toDto(vehiculeService.create(vehiculeMapper.toEntity(vehicule)));
     }
 
     @Operation(summary = "Modifier : Vehicule")
@@ -67,9 +70,9 @@ public class VehiculeController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PutMapping("/{id}")
-    public Vehicule update(@Parameter(description = "Identifiant") @PathVariable Long id,
-            @Valid @RequestBody Vehicule vehicule) {
-        return vehiculeService.update(id, vehicule);
+    public VehiculeDto update(@Parameter(description = "Identifiant") @PathVariable Long id,
+            @Valid @RequestBody VehiculeDto vehicule) {
+        return vehiculeMapper.toDto(vehiculeService.update(id, vehiculeMapper.toEntity(vehicule)));
     }
 
     @Operation(summary = "Supprimer : Vehicule")
@@ -85,19 +88,19 @@ public class VehiculeController {
 
     @Operation(summary = "Desaffecter l'agence du vehicule")
     @DeleteMapping("/{idVehicule}/agence")
-    public Vehicule desaffecterAgence(@PathVariable Long idVehicule) {
-        return vehiculeService.desaffecterAgence(idVehicule);
+    public VehiculeDto desaffecterAgence(@PathVariable Long idVehicule) {
+        return vehiculeMapper.toDto(vehiculeService.desaffecterAgence(idVehicule));
     }
 
     @Operation(summary = "Affecter une agence au vehicule")
     @PutMapping("/{idVehicule}/agence/{idAgence}")
-    public Vehicule affecterAgence(@PathVariable Long idVehicule, @PathVariable Long idAgence) {
-        return vehiculeService.affecterAgence(idVehicule, idAgence);
+    public VehiculeDto affecterAgence(@PathVariable Long idVehicule, @PathVariable Long idAgence) {
+        return vehiculeMapper.toDto(vehiculeService.affecterAgence(idVehicule, idAgence));
     }
 
     @Operation(summary = "Affecter un equipement au vehicule")
     @PutMapping("/{idVehicule}/equipements/{idEquipement}")
-    public Vehicule affecterEquipement(@PathVariable Long idVehicule, @PathVariable Long idEquipement) {
-        return vehiculeService.affecterEquipement(idVehicule, idEquipement);
+    public VehiculeDto affecterEquipement(@PathVariable Long idVehicule, @PathVariable Long idEquipement) {
+        return vehiculeMapper.toDto(vehiculeService.affecterEquipement(idVehicule, idEquipement));
     }
 }

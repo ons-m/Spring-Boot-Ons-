@@ -17,9 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import tn.esprit.autoloc.domain.Maintenance;
 import tn.esprit.autoloc.service.IMaintenanceService;
 import tn.esprit.autoloc.web.ErrorResponse;
+import tn.esprit.autoloc.web.dto.MaintenanceDto;
+import tn.esprit.autoloc.web.dto.MaintenanceMapper;
 
 import java.util.List;
 
@@ -29,16 +30,18 @@ import java.util.List;
 public class MaintenanceController {
 
     private final IMaintenanceService maintenanceService;
+    private final MaintenanceMapper maintenanceMapper;
 
-    public MaintenanceController(IMaintenanceService maintenanceService) {
+    public MaintenanceController(IMaintenanceService maintenanceService, MaintenanceMapper maintenanceMapper) {
         this.maintenanceService = maintenanceService;
+        this.maintenanceMapper = maintenanceMapper;
     }
 
     @Operation(summary = "Lister les maintenances")
     @ApiResponse(responseCode = "200", description = "Liste retournee")
     @GetMapping
-    public List<Maintenance> findAll() {
-        return maintenanceService.findAll();
+    public List<MaintenanceDto> findAll() {
+        return maintenanceMapper.toDtoList(maintenanceService.findAll());
     }
 
     @Operation(summary = "Consulter : Maintenance")
@@ -46,8 +49,8 @@ public class MaintenanceController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{id}")
-    public Maintenance findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
-        return maintenanceService.findById(id);
+    public MaintenanceDto findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
+        return maintenanceMapper.toDto(maintenanceService.findById(id));
     }
 
     @Operation(summary = "Creer : Maintenance")
@@ -56,8 +59,8 @@ public class MaintenanceController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Maintenance create(@Valid @RequestBody Maintenance maintenance) {
-        return maintenanceService.create(maintenance);
+    public MaintenanceDto create(@Valid @RequestBody MaintenanceDto maintenance) {
+        return maintenanceMapper.toDto(maintenanceService.create(maintenanceMapper.toEntity(maintenance)));
     }
 
     @Operation(summary = "Modifier : Maintenance")
@@ -67,9 +70,9 @@ public class MaintenanceController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PutMapping("/{id}")
-    public Maintenance update(@Parameter(description = "Identifiant") @PathVariable Long id,
-            @Valid @RequestBody Maintenance maintenance) {
-        return maintenanceService.update(id, maintenance);
+    public MaintenanceDto update(@Parameter(description = "Identifiant") @PathVariable Long id,
+            @Valid @RequestBody MaintenanceDto maintenance) {
+        return maintenanceMapper.toDto(maintenanceService.update(id, maintenanceMapper.toEntity(maintenance)));
     }
 
     @Operation(summary = "Supprimer : Maintenance")

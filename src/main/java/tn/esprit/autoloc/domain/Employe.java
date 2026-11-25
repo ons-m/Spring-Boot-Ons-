@@ -12,6 +12,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,13 +34,16 @@ public class Employe {
     private Long idEmploye;
 
     @Column(nullable = false, length = 100)
+    @NotBlank(message = "Le nom est obligatoire") @Size(max = 100, message = "Le nom ne doit pas depasser 100 caracteres")
     private String nom;
 
     @Column(nullable = false, length = 100)
+    @NotBlank(message = "Le prenom est obligatoire") @Size(max = 100, message = "Le prenom ne doit pas depasser 100 caracteres")
     private String prenom;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
+    @NotNull(message = "Le role est obligatoire")
     private RoleEmploye role;
 
     // Plusieurs employes peuvent travailler dans la meme agence.

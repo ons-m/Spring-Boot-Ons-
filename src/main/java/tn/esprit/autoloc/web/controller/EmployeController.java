@@ -17,9 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import tn.esprit.autoloc.domain.Employe;
 import tn.esprit.autoloc.service.IEmployeService;
 import tn.esprit.autoloc.web.ErrorResponse;
+import tn.esprit.autoloc.web.dto.EmployeDto;
+import tn.esprit.autoloc.web.dto.EmployeMapper;
 
 import java.util.List;
 
@@ -29,16 +30,18 @@ import java.util.List;
 public class EmployeController {
 
     private final IEmployeService employeService;
+    private final EmployeMapper employeMapper;
 
-    public EmployeController(IEmployeService employeService) {
+    public EmployeController(IEmployeService employeService, EmployeMapper employeMapper) {
         this.employeService = employeService;
+        this.employeMapper = employeMapper;
     }
 
     @Operation(summary = "Lister les employes")
     @ApiResponse(responseCode = "200", description = "Liste retournee")
     @GetMapping
-    public List<Employe> findAll() {
-        return employeService.findAll();
+    public List<EmployeDto> findAll() {
+        return employeMapper.toDtoList(employeService.findAll());
     }
 
     @Operation(summary = "Consulter : Employe")
@@ -46,8 +49,8 @@ public class EmployeController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{id}")
-    public Employe findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
-        return employeService.findById(id);
+    public EmployeDto findById(@Parameter(description = "Identifiant") @PathVariable Long id) {
+        return employeMapper.toDto(employeService.findById(id));
     }
 
     @Operation(summary = "Creer : Employe")
@@ -56,8 +59,8 @@ public class EmployeController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Employe create(@Valid @RequestBody Employe employe) {
-        return employeService.create(employe);
+    public EmployeDto create(@Valid @RequestBody EmployeDto employe) {
+        return employeMapper.toDto(employeService.create(employeMapper.toEntity(employe)));
     }
 
     @Operation(summary = "Modifier : Employe")
@@ -67,9 +70,9 @@ public class EmployeController {
             @ApiResponse(responseCode = "404", description = "Ressource introuvable",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
     @PutMapping("/{id}")
-    public Employe update(@Parameter(description = "Identifiant") @PathVariable Long id,
-            @Valid @RequestBody Employe employe) {
-        return employeService.update(id, employe);
+    public EmployeDto update(@Parameter(description = "Identifiant") @PathVariable Long id,
+            @Valid @RequestBody EmployeDto employe) {
+        return employeMapper.toDto(employeService.update(id, employeMapper.toEntity(employe)));
     }
 
     @Operation(summary = "Supprimer : Employe")

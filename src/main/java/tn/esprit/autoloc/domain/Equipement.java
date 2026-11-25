@@ -10,6 +10,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,6 +34,7 @@ public class Equipement {
     private Long idEquipement;
 
     @Column(nullable = false, unique = true, length = 100)
+    @NotBlank(message = "Le libelle est obligatoire") @Size(max = 100, message = "Le libelle ne doit pas depasser 100 caracteres")
     private String libelle;
 
     // Cote inverse de la relation ManyToMany.
